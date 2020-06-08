@@ -8,6 +8,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.ComponentModel;
 
 namespace Task2 {
 
@@ -38,7 +39,7 @@ namespace Task2 {
         /// </summary>
         /// <param name="inputFile"></param>
         /// <param name="password"></param>
-        public void FileEncrypt(string inputFile, string password) {
+        public void FileEncrypt(string inputFile, string password, BackgroundWorker worker) {
             //http://stackoverflow.com/questions/27645527/aes-encryption-on-large-files
 
             //generate random salt
@@ -80,6 +81,7 @@ namespace Task2 {
                 while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0) {
                     Application.DoEvents(); // -> for responsive GUI, using Task will be better!
                     cs.Write(buffer, 0, read);
+                    worker.ReportProgress(read % 100);
                 }
 
                 // Close up
@@ -98,7 +100,7 @@ namespace Task2 {
         /// <param name="inputFile"></param>
         /// <param name="outputFile"></param>
         /// <param name="password"></param>
-        public void FileDecrypt(string inputFile, string outputFile, string password) {
+        public void FileDecrypt(string inputFile, string outputFile, string password, BackgroundWorker worker) {
             byte[] passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
             byte[] salt = new byte[32];
 
@@ -125,6 +127,7 @@ namespace Task2 {
                 while ((read = cs.Read(buffer, 0, buffer.Length)) > 0) {
                     Application.DoEvents();
                     fsOut.Write(buffer, 0, read);
+                    worker.ReportProgress(read % 100);
                 }
             } catch (CryptographicException ex_CryptographicException) {
                 Console.WriteLine("CryptographicException error: " + ex_CryptographicException.Message);
