@@ -58,12 +58,12 @@ namespace Task2 {
             }
         }
 
-        private void Encrypt() {
+        private void Encrypt(DoWorkEventArgs e) {
             string zipPath = @"C:\Users\s033972\Desktop\encrypted_result.zip";
             try {
                 ZipFile.CreateFromDirectory(selectedDirectory, zipPath, CompressionLevel.Fastest, true);
                 AESEncryption crypt = new AESEncryption();
-                crypt.FileEncrypt(zipPath, "123", worker);
+                crypt.FileEncrypt(zipPath, "123", worker, e);
                 using (var md5 = MD5.Create()) {
                     using (var stream = File.OpenRead(@"C:\Users\s033972\Desktop\encrypted_result.zip.aes")) {
                         hashes.Add(ByteArrayToString(md5.ComputeHash(stream)));
@@ -74,27 +74,32 @@ namespace Task2 {
             }
         }
 
-        private void Decrypt() {
+        private void Decrypt(DoWorkEventArgs e) {
             try {
                 AESEncryption crypt = new AESEncryption();
-                crypt.FileDecrypt(selectedFile, @"C:\Users\s033972\Desktop\decrypted.zip", "123", worker2);
+                crypt.FileDecrypt(selectedFile, @"C:\Users\s033972\Desktop\decrypted.zip", "123", worker2, e);
             } catch (Exception ex) {
             }
         }
 
         private void Worker_Completed(object sender, RunWorkerCompletedEventArgs e) {
+            if (e.Cancelled) {
+                MessageBox.Show("canceled!");
+            }
+            else {
+                MessageBox.Show("completed");
+            }
             button1.Enabled = true;
             button2.Enabled = true;
             progressBar1.Value = 0;
-            Console.WriteLine("completed");
         }
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e) {
-            Encrypt();
+            Encrypt(e);
         }
 
         private void Worker_DoWork2(object sender, DoWorkEventArgs e) {
-            Decrypt();
+            Decrypt(e);
         }
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e) {
@@ -131,6 +136,9 @@ namespace Task2 {
 
         private void button3_Click(object sender, EventArgs e) {
             //cancel background worker
+            
+            this.worker.CancelAsync();
+            this.worker2.CancelAsync();
         }
     }
 

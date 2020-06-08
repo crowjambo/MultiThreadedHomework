@@ -39,7 +39,7 @@ namespace Task2 {
         /// </summary>
         /// <param name="inputFile"></param>
         /// <param name="password"></param>
-        public void FileEncrypt(string inputFile, string password, BackgroundWorker worker) {
+        public void FileEncrypt(string inputFile, string password, BackgroundWorker worker, DoWorkEventArgs e) {
             //http://stackoverflow.com/questions/27645527/aes-encryption-on-large-files
 
             //generate random salt
@@ -81,6 +81,10 @@ namespace Task2 {
                 while ((read = fsIn.Read(buffer, 0, buffer.Length)) > 0) {
                     Application.DoEvents(); // -> for responsive GUI, using Task will be better!
                     cs.Write(buffer, 0, read);
+                    if (worker.CancellationPending == true) {
+                        e.Cancel = true;
+                        return;
+                    }
                     worker.ReportProgress(read % 100);
                 }
 
@@ -100,7 +104,7 @@ namespace Task2 {
         /// <param name="inputFile"></param>
         /// <param name="outputFile"></param>
         /// <param name="password"></param>
-        public void FileDecrypt(string inputFile, string outputFile, string password, BackgroundWorker worker) {
+        public void FileDecrypt(string inputFile, string outputFile, string password, BackgroundWorker worker, DoWorkEventArgs e) {
             byte[] passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
             byte[] salt = new byte[32];
 
@@ -127,6 +131,10 @@ namespace Task2 {
                 while ((read = cs.Read(buffer, 0, buffer.Length)) > 0) {
                     Application.DoEvents();
                     fsOut.Write(buffer, 0, read);
+                    if (worker.CancellationPending == true) {
+                        e.Cancel = true;
+                        return;
+                    }
                     worker.ReportProgress(read % 100);
                 }
             } catch (CryptographicException ex_CryptographicException) {
